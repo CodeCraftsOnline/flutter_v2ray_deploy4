@@ -41,7 +41,7 @@ public class V2rayController {
         }
     }
 
-    public static void StartV2ray(final Context context, final String remark, final String config, final ArrayList<String> blocked_apps, final ArrayList<String> bypass_subnets) {
+   public static void StartV2ray(final Context context, final String remark, final String config, final ArrayList<String> blocked_apps, final ArrayList<String> bypass_subnets) {
         AppConfigs.V2RAY_CONFIG = Utilities.parseV2rayJsonFile(remark, config, blocked_apps, bypass_subnets);
         if (AppConfigs.V2RAY_CONFIG == null) {
             return;
@@ -56,11 +56,8 @@ public class V2rayController {
         }
         start_intent.putExtra("COMMAND", AppConfigs.V2RAY_SERVICE_COMMANDS.START_SERVICE);
         start_intent.putExtra("V2RAY_CONFIG", AppConfigs.V2RAY_CONFIG);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-            context.startForegroundService(start_intent);
-        } else {
-            context.startService(start_intent);
-        }
+        
+        context.startService(start_intent);
     }
 
     public static void StopV2ray(final Context context) {
