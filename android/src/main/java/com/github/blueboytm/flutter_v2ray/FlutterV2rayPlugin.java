@@ -7,6 +7,7 @@ import android.content.Context;
 import android.app.Activity;
 import android.net.VpnService;
 import android.content.Intent;
+import android.os.Build;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 
@@ -72,7 +73,7 @@ public class FlutterV2rayPlugin implements FlutterPlugin, ActivityAware {
                 case "getServerDelay":
                     executor.submit(() -> {
                         try {
-                            result.success(V2rayController.getV2rayServerDelay(call.argument("config")));
+                            result.success(V2rayController.getV2rayServerDelay(call.argument("config"), call.argument("url")));
                         } catch (Exception e) {
                             result.success(-1);
                         }
@@ -81,6 +82,7 @@ public class FlutterV2rayPlugin implements FlutterPlugin, ActivityAware {
                 case "getConnectedServerDelay":
                     executor.submit(() -> {
                         try {
+                            AppConfigs.DELAY_URL = call.argument("url");
                             result.success(V2rayController.getConnectedV2rayServerDelay(binding.getApplicationContext()));
                         } catch (Exception e) {
                             result.success(-1);
@@ -124,18 +126,23 @@ public class FlutterV2rayPlugin implements FlutterPlugin, ActivityAware {
                 try {
                     ArrayList<String> list = new ArrayList<>();
                     list.add(intent.getExtras().getString("DURATION"));
-                    list.add(intent.getExtras().getString("UPLOAD_SPEED"));
-                    list.add(intent.getExtras().getString("DOWNLOAD_SPEED"));
-                    list.add(intent.getExtras().getString("UPLOAD_TRAFFIC"));
-                    list.add(intent.getExtras().getString("DOWNLOAD_TRAFFIC"));
+                    list.add(String.valueOf(intent.getLongExtra("UPLOAD_SPEED", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("DOWNLOAD_SPEED", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("UPLOAD_TRAFFIC", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("DOWNLOAD_TRAFFIC", 0)));
                     list.add(intent.getExtras().getSerializable("STATE").toString().substring(6));
                     vpnStatusSink.success(list);
-                }
-                catch(Exception ignored) {}
+                } catch (Exception ignored) {}
             }
         };
-        activity.registerReceiver(v2rayBroadCastReceiver, new IntentFilter("V2RAY_CONNECTION_INFO"));
+        IntentFilter filter = new IntentFilter("V2RAY_CONNECTION_INFO");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity.registerReceiver(v2rayBroadCastReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            activity.registerReceiver(v2rayBroadCastReceiver, filter);
+        }
     }
+
 
     @Override
     public void onDetachedFromActivityForConfigChanges() {
@@ -148,20 +155,25 @@ public class FlutterV2rayPlugin implements FlutterPlugin, ActivityAware {
         v2rayBroadCastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-               try {
+                try {
                     ArrayList<String> list = new ArrayList<>();
                     list.add(intent.getExtras().getString("DURATION"));
-                    list.add(intent.getExtras().getString("UPLOAD_SPEED"));
-                    list.add(intent.getExtras().getString("DOWNLOAD_SPEED"));
-                    list.add(intent.getExtras().getString("UPLOAD_TRAFFIC"));
-                    list.add(intent.getExtras().getString("DOWNLOAD_TRAFFIC"));
+                    list.add(String.valueOf(intent.getLongExtra("UPLOAD_SPEED", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("DOWNLOAD_SPEED", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("UPLOAD_TRAFFIC", 0)));
+                    list.add(String.valueOf(intent.getLongExtra("DOWNLOAD_TRAFFIC", 0)));
                     list.add(intent.getExtras().getSerializable("STATE").toString().substring(6));
                     vpnStatusSink.success(list);
-                }
-                catch(Exception ignored) {}
+                } 
+                catch (Exception ignored) {}
             }
         };
-        activity.registerReceiver(v2rayBroadCastReceiver, new IntentFilter("V2RAY_CONNECTION_INFO"));
+        IntentFilter filter = new IntentFilter("V2RAY_CONNECTION_INFO");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity.registerReceiver(v2rayBroadCastReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            activity.registerReceiver(v2rayBroadCastReceiver, filter);
+        }
     }
 
     @Override
