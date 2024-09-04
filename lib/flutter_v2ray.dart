@@ -137,4 +137,47 @@ class FlutterV2ray {
         throw ArgumentError('url is invalid');
     }
   }
+
+  
+  /// New method to handle multiple config pings using isolates
+  Future<List<int>> getServerDelaysWithIsolates({
+    required List<String> configs,
+    String url = 'https://google.com/generate_204',
+  }) async {
+    final receivePort = ReceivePort();
+    final token = RootIsolateToken.instance;
+
+    // Iterate over each config and spawn an isolate for it
+    for (final config in configs) {
+      await Isolate.spawn(_isolateGetServerDelay, {
+        'config': config,
+        'url': url,
+        'sendPort': receivePort.sendPort,
+        'token': token,
+      });
+    }
+
+    // Collect results from the isolates
+    List<int> results = [];
+    for (int i = 0; i < configs.length; i++) {
+      final result = await receivePort.first as int;
+      results.add(result);
+    }
+
+    return results;
+  }
+
+  static void _isolateGetServerDelay(Map<String, dynamic> params) async {
+    final token = params['token'] as RootIsolateToken;
+    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+
+    final config = params['config'] as String;
+    final url = params['url'] as String;
+    final sendPort = params['sendPort'] as SendPort;
+
+    final flutterV2ray = FlutterV2ray(onStatusChanged: (status) {});
+    final result = await flutterV2ray.getServerDelay(config: config, url: url);
+
+    sendPort.send(result);
+  }
 }
