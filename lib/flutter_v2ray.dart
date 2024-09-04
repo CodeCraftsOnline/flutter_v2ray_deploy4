@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'dart:isolate';
 import 'package:flutter_v2ray/url/shadowsocks.dart';
 import 'package:flutter_v2ray/url/socks.dart';
 import 'package:flutter_v2ray/url/trojan.dart';
